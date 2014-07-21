@@ -4,6 +4,7 @@
 
 .#{$calendar-class-name} {
     position: absolute;
+    table-layout: fixed;
     border-collapse: separate;
     padding: $calendar-padding;
     background: $calendar-bg-color;
@@ -31,45 +32,51 @@
 
     thead {
         background: $calendar-header-bg; 
-        @include border-top-radius($border-radius);
         @extend .align-center;
         a { text-decoration: none; }
         .previous, .next {
             vertical-align: middle;
             a { font-size: 1.25em; }
         }
-        .previous { @include border-top-left-radius($border-radius); }
-        .next { @include border-top-right-radius($border-radius); }
+        .previous { @include border-left-radius($border-radius); }
+        .next { @include border-right-radius($border-radius); }
         .title {}
     }
     
     tbody {
 
         font-size: $calendar-font-size;
-
-        &.month {
-
-            .header {
-                color: #aaa;
+        
+        .header {
+            color: $grey-40; 
+            td {
                 border-bottom: 1px solid $grey-10;
             }
+        }
 
-            td {
-                @extend .align-center;
-                
-                a {
-                    padding: 0 .6em;
-                    display: block;
-                    text-decoration: none;
-                    @include border-radius($border-radius);
-                    &:hover { background: $calendar-cellHover; }
+        td {
+            @extend .align-center;
+            
+            a {
+                padding: 0 .6em;
+                display: block;
+                text-decoration: none;
+                @include border-radius($border-radius);
+                &:hover { background: $calendar-cellHover; }
+            }
+
+            &.active {
+                a { 
+                    background: $calendar-active-bg;
+                    color: $calendar-active-color; 
                 }
+            }
 
-                &.active {
-                    a { 
-                        background: $calendar-active-bg;
-                        color: $calendar-active-color; 
-                    }
+            &.disabled {
+                a {
+                    cursor: default;
+                    background: none;
+                    color: $calendar-inactive-color; 
                 }
             }
         }

@@ -45,7 +45,6 @@
         <script type="text/javascript" src="../js/ink-all.min.js"></script>
         <script type="text/javascript" src="../js/autoload.js"></script>
         -->
-
         <style type="text/css">
 
             body {
@@ -83,7 +82,7 @@
             <!-- Add your site or application content here -->
 
             <header class="vertical-space">
-                <h1>site name<small>smaller text</small></h1>
+                <h1 class="slab">site name<small>smaller text</small></h1>
                 <nav class="ink-navigation">
                     <ul class="menu horizontal black">
                         <li class="active"><a href="#">item</a></li>
@@ -100,10 +99,12 @@
                     
                     <form class="control-group column-group gutters">
                         
+                        
                         <div class="control all-50 ink-datepicker">
-                        
-                            <input type="text" id="myDatePicker" data-instance="instance1">
-                        
+                            
+                            <button class="ink-button toggle no-margin" data-target=".ink-calendar">Calendar</button>
+                            <!--<input type="text" id="myDatePicker" data-target="ink-calendar" data-instance="instance1">-->
+                            
                             <table class="ink-calendar bottom">
                                 <thead>
                                     <tr>
@@ -112,7 +113,57 @@
                                         <td class="next"><a href="#" class="fa fa-angle-double-right"></a></td>
                                     </tr>
                                 </thead>
+                                
+                                <tbody class="year">
+                                    <tr>
+                                        <td colspan="3"><a href="">2007</a></td>
+                                        <td><a href="">2008</a></td>
+                                        <td><a href="">2009</a></td>
+                                        <td><a href="">2010</a></td>
+                                        <td><a href="">2011</a></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="active" colspan="3"><a href="">2012</a></td>
+                                        <td><a href="">2013</a></td>
+                                        <td><a href="">2014</a></td>
+                                        <td><a href="">2015</a></td>
+                                        <td><a href="">2016</a></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="disabled" colspan="3"><a href="">2017</a></td>
+                                        <td class="disabled"><a href="">2018</a></td>
+                                        <td class="disabled"><a href="">2019</a></td>
+                                        <td class="disabled"><a href="">2020</a></td>
+                                        <td class="disabled"><a href="">2021</a></td>
+                                    </tr>
+                                </tbody>
+                                <!--
                                 <tbody class="month">
+                                    <tr>
+                                        <td colspan="3"><a href="">Jan</a></td>
+                                        <td><a href="">Feb</a></td>
+                                        <td><a href="">Mar</a></td>
+                                        <td><a href="">Apr</a></td>
+                                        <td><a href="">May</a></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="active" colspan="3"><a href="">Jun</a></td>
+                                        <td><a href="">Jul</a></td>
+                                        <td><a href="">Aug</a></td>
+                                        <td><a href="">Sep</a></td>
+                                        <td><a href="">Oct</a></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="disabled" colspan="3"><a href="">Nov</a></td>
+                                        <td class="disabled"><a href="">Dec</a></td>
+                                        <td class="disabled"><a href="">&nbsp</a></td>
+                                        <td class="disabled"><a href="">&nbsp</a></td>
+                                        <td class="disabled"><a href="">&nbsp</a></td>
+                                    </tr>
+                                </tbody>
+                                -->
+                                <!--
+                                <tbody class="week">
                                     <tr class="header">
                                         <td>M</td>
                                         <td>T</td>
@@ -168,14 +219,22 @@
                                         <td>&nbsp;</td>
                                     </tr>
                                 </tbody>
+                                -->
                             </table>
-                        </div>
+                        
 
+                        </div>
+                        
                     </form>
 
 
                 </div>
 
+                <div class="all-100">
+                    <p>
+                        Morbi mi neque, eleifend faucibus placerat ut, porta vel ipsum. Suspendisse rutrum libero id ante auctor mollis. Donec pulvinar lectus enim, et cursus nulla tristique non. In eget ante in ante feugiat eleifend quis vel quam. Vivamus eleifend et ligula in convallis. Integer pharetra mattis nisi non lobortis. Mauris mattis accumsan massa a condimentum. Vestibulum tincidunt, eros nec tincidunt consequat, nulla nibh fermentum arcu, ut adipiscing est diam blandit purus. Integer tristique, tellus quis varius sodales, mauris ligula rutrum velit, eget vestibulum dui diam et magna.
+                    </p>
+                </div>
                 <!--
                 <script>
                     // Not required if you're using autoload.js
