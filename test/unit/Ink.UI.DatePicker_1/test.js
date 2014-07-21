@@ -46,10 +46,13 @@ test('set', function () {
     equal(dt.getDate(), 10);
 });
 
-test('show', function () {
+test('show, hide', function () {
     equal(Css.getStyle(dt._calendarEl, 'display'), 'none');
     dt.show();
     notEqual(Css.getStyle(dt._calendarEl, 'display'), 'none');
+    dt.hide();
+    equal(Css.getStyle(dt._calendarEl, 'display'), 'none');
+    dt.hide();
 });
 
 test('destroy', function () {

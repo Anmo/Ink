@@ -152,53 +152,18 @@ Ink.createModule('Ink.UI.DatePicker', '1', ['Ink.UI.Common_1','Ink.Dom.Event_1',
                 }
             }
 
-            this._calendar.setOption('onSetDate', Ink.bind(function (data) {
-                if(!this._options.displayInSelect){
-                    this._element.value = this._writeDateInFormat();
+            var self = this;
+            this._calendar.setOption('onSetDate', function () {
+                if(!self._options.displayInSelect){
+                    self._element.value = self._writeDateInFormat();
                 } else {
-                    this._options.dayField.value   = this._day;
-                    this._options.monthField.value = this._month + 1;
-                    this._options.yearField.value  = this._year;
+                    self._options.dayField.value   = this._day;
+                    self._options.monthField.value = this._month + 1;
+                    self._options.yearField.value  = this._year;
                 }
-            }, this));
+            });
 
-            (function renderClearAndCloseButtons() {
-                if((!this._options.showClose) && (!this._options.showClean)){ return; }
-
-                var both = !!(
-                        this._options.showClose &&
-                        this._options.showClean);
-
-                var calendarHeader = Ink.s('thead', this._calendar.getElement());
-
-                var clearCloseBar = InkElement.create("tr", {
-                    className: 'ink-calendar-top-options' });
-
-                calendarHeader.insertBefore(clearCloseBar, calendarHeader.firstChild);
-                //InkElement.insertTop(calendarHeader, clearCloseBar);
-
-                var th;
-
-                if(this._options.showClean){
-                    th = clearCloseBar.appendChild(InkElement.create('th', { colspan: both ? '3' : '7' }));
-                    th.appendChild(InkElement.create('a', {
-                        className: 'top-button clean',
-                        setHTML: this._options.cleanText
-                    }));
-                }
-                if (both) {
-                    // Add a th to the middle.
-                    th = clearCloseBar.appendChild(InkElement.create('th', { colspan: '1' }));
-                }
-                if(this._options.showClose){
-                    th = clearCloseBar.appendChild(InkElement.create('th', { colspan: both ? '3' : '7' }));
-                    th.appendChild(InkElement.create('a', {
-                        className: 'top-button close',
-                        setHTML: this._options.closeText
-                    }));
-                }
-            }.call(this));
-
+            this._renderClearAndCloseButtons();
             this._listenToContainerObjectEvents();
             this._addDateChangeHandlersToInputs();
         },
@@ -209,6 +174,43 @@ Ink.createModule('Ink.UI.DatePicker', '1', ['Ink.UI.Common_1','Ink.Dom.Event_1',
                 throw new Error(
                     'Ink.UI.DatePicker: displayInSelect option enabled.'+
                     'Please specify dayField, monthField and yearField selectors.');
+            }
+        },
+
+        _renderClearAndCloseButtons: function () {
+            if((!this._options.showClose) && (!this._options.showClean)){ return; }
+
+            var both = !!(
+                    this._options.showClose &&
+                    this._options.showClean);
+
+            var calendarHeader = Ink.s('thead', this._calendar.getElement());
+
+            var clearCloseBar = InkElement.create("tr", {
+                className: 'ink-calendar-top-options' });
+
+            calendarHeader.insertBefore(clearCloseBar, calendarHeader.firstChild);
+            //InkElement.insertTop(calendarHeader, clearCloseBar);
+
+            var th;
+
+            if(this._options.showClean){
+                th = clearCloseBar.appendChild(InkElement.create('th', { colspan: both ? '3' : '7' }));
+                th.appendChild(InkElement.create('a', {
+                    className: 'top-button clean',
+                    setHTML: this._options.cleanText
+                }));
+            }
+            if (both) {
+                // Add a th to the middle.
+                th = clearCloseBar.appendChild(InkElement.create('th', { colspan: '1' }));
+            }
+            if(this._options.showClose){
+                th = clearCloseBar.appendChild(InkElement.create('th', { colspan: both ? '3' : '7' }));
+                th.appendChild(InkElement.create('a', {
+                    className: 'top-button close',
+                    setHTML: this._options.closeText
+                }));
             }
         },
 
@@ -379,12 +381,13 @@ Ink.createModule('Ink.UI.DatePicker', '1', ['Ink.UI.Common_1','Ink.Dom.Event_1',
         },
 
         /**
-         * Hides the DatePicker.
-         * If the component is shy (options.shy), behaves differently.
+         * Hide the DatePicker.
          *
-         * @method _hide
-         * @param {Boolean}    [blur]   If false, forces hiding even if the component is shy.
+         * @method hide
+         * @public
          */
+        hide: function () { this._hide(false); },
+
         _hide: function(blur) {
             blur = blur === undefined ? true : blur;
             if (blur === false || (blur && this._options.shy)) {

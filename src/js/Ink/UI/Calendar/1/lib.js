@@ -99,6 +99,7 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
         _bindEvents: function () {
             var self = this;
 
+            // TODO use getprevMonth, getPrevYear, getNextYear, etc.
             function extendDate(partialDateish) {
                 var dt = { _year: self._year, _month: self._month, _day: self._day };
 
@@ -392,7 +393,6 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
                 if (!this._acceptableMonth({ _year: this._year, _month: mon })) {
                     monthButton.className = 'disabled';
                 }
-
                 if (mon === this._month) {
                     monthButton.className = 'active';
                 }
@@ -457,7 +457,7 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
                     dateString._month + 1, dateString._day ].join('-');
             }
 
-            var newDate = {}
+            var newDate = {};
             if ( /\d{4}-\d{1,2}-\d{1,2}/.test( dateString ) ) {
                 var auxDate = dateString.split( '-' );
                 newDate._year  = +auxDate[ 0 ];
@@ -597,6 +597,8 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
         _acceptableYear: function (date) {
             return this._acceptableDateComponent(date, 'validYearFn');
         },
+
+        // TODO acceptableDecade
 
         /** DRY base for the above 2 functions */
         _acceptableDateComponent: function (date, userCb) {
