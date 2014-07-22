@@ -123,29 +123,7 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
                     dt._day = partialDateish._day;
                 }
 
-                // Fit months
-                // Example: we're in december, and we click "next month". We expect to go to january, next year.
-                if (dt._month > 11) {
-                    dt._month = 0;
-                    dt._year += 1;
-                }
-                if (dt._months < 0) {
-                    dt._month = 11;
-                    dt._year -= 1;
-                }
-
-                // Fit days.
-                // Example: we're 31st january. If we click "next month" we should go to 28th february.
-                dt._day = clamp(dt._day, 0, self._daysInMonth(dt._year, dt._month));
-
                 self._setDate(dt);
-            }
-
-            function incrementDate(fragment, increment) {
-                var dt = {};
-                dt[fragment] = self[fragment];
-                dt[fragment] += increment;
-                extendDate(dt);
             }
 
             // Top bar
@@ -161,26 +139,15 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
             Event.on(this._element, 'click', '[href^="#next"], [href^="#prev"]', function (ev) {
                 var tbody = Ink.s('tbody', self._element);
                 var isNext = /#next$/.test(ev.currentTarget.href);
-                var isWhat = Css.hasClassName(tbody, 'month') ? 'month' :
-                             Css.hasClassName(tbody, 'year')  ? 'year' :
-                                                                'decade';
+                var fragment = Css.hasClassName(tbody, 'month') ? 'Month' :
+                               Css.hasClassName(tbody, 'year')  ? 'Year' :
+                                                                  'Decade';
 
-                var increment = isNext ? 1 : -1;
+                var increment = isNext ? 'Next' : 'Prev';
 
-                if (isWhat === 'decade') {
-                    incrementDate('_year', increment * 10);
-                } else {
-                    incrementDate('_' + isWhat, increment);
-                }
-
-                if (isWhat === 'month') {
-                    self.monthView();
-                } else if (isWhat === 'year') {
-                    self.yearView();
-                } else if (isWhat === 'decade') {
-                    self.decadeView();
-                }
+                self._onNextPrevClicked(fragment, increment);
             });
+
             // Month view
             Event.on(this._element, 'click', '[data-cal-day]', function (ev) {
                 extendDate({ _day: +ev.currentTarget.getAttribute('data-cal-day') });
@@ -520,6 +487,30 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
             }
             if (dayChanged) {
                 callUserCallback(this._options.onSetDay);
+            }
+        },
+
+        /**
+         * Called when "next" or "previous" button is clicked.
+         *
+         * @method _onNextPrevClicked
+         *
+         * @param dateFragment "Year", "Decade", or "Month", depending on current view
+         * @param nextOrPrev {String} "Next" or "Prev" string indicating whether the user clicked "next" or "previous" button.
+         **/
+        _onNextPrevClicked: function (dateFragment, nextOrPrev) {
+            var getNextPrevFragmentFunc = this['_get' + nextOrPrev + dateFragment];
+
+            var newDate = getNextPrevFragmentFunc.call(this);
+
+            this._setDate(newDate);
+
+            if (dateFragment === 'Month') {
+                this.monthView();
+            } else if (dateFragment === 'Year') {
+                this.yearView();
+            } else if (dateFragment === 'Decade') {
+                this.decadeView();
             }
         },
 
