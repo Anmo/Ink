@@ -14,6 +14,14 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
         return dateishFromYMD(+split[0], +split[1] - 1, +split[2]);
     }
 
+    function roundDecade(year) {
+        if (year._year) {
+            return roundDecade(year._year);
+        }
+
+        return Math.floor(year / 10) * 10;
+    }
+
     // Clamp a number into a min/max limit
     function clamp(n, min, max) {
         if (n > max) { n = max; }
@@ -410,12 +418,12 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
         decadeView: function () {
             var view = this._replaceTbody('decade');
 
-            var closestDecade = Math.floor(this._year / 10) * 10;  // 2014 -> 2010,  2010 -> 2010
-            var nextDecade = closestDecade + 10;
+            var thisDecade = roundDecade(this);
+            var nextDecade = thisDecade + 10;
 
             var tr = view.appendChild(InkElement.create('tr'));
 
-            for (var year = closestDecade; year < nextDecade; year++) {
+            for (var year = thisDecade; year < nextDecade; year++) {
                 var td = tr.appendChild(
                         InkElement.create('td'));
 
@@ -710,6 +718,9 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
 
             return this['_acceptable' + atomName](date) ? date : null;
         },
+            if (atomName === 'Decade') {
+                date._year = roundDecade(date._year);
+            }
 
         _getNextDecade: function (date) {
             date = date || { _year: this._year, _month: this._month, _day: this._day };
