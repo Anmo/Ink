@@ -606,8 +606,6 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
             return this._acceptableDateComponent(date, 'validYearFn');
         },
 
-        // TODO acceptableDecade
-
         /** DRY base for the above 2 functions */
         _acceptableDateComponent: function (date, userCb) {
             if (this._options[userCb]) {
@@ -642,7 +640,7 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
          * Get the next month we can show.
          */
         _getNextMonth: function (date) {
-            return this._tryLeap( date, 'Month', 'next', function (d) {
+            return this._tryLeap('Month', 'next', function (d) {
                     d._month += 1;
                     if (d._month > 11) {
                         d._month = 0;
@@ -655,8 +653,8 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
         /**
          * Get the previous month we can show.
          */
-        _getPrevMonth: function (date) {
-            return this._tryLeap( date, 'Month', 'prev', function (d) {
+        _getPrevMonth: function () {
+            return this._tryLeap('Month', 'prev', function (d) {
                     d._month -= 1;
                     if (d._month < 0) {
                         d._month = 11;
@@ -667,10 +665,10 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
         },
 
         /**
-         * Get the next year we can show.
+         * Get the previous year we can show.
          */
-        _getPrevYear: function (date) {
-            return this._tryLeap( date, 'Year', 'prev', function (d) {
+        _getPrevYear: function () {
+            return this._tryLeap('Year', 'prev', function (d) {
                     d._year -= 1;
                     return d;
                 });
@@ -679,9 +677,23 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
         /**
          * Get the next year we can show.
          */
-        _getNextYear: function (date) {
-            return this._tryLeap( date, 'Year', 'next', function (d) {
+        _getNextYear: function () {
+            return this._tryLeap('Year', 'next', function (d) {
                     d._year += 1;
+                    return d;
+                });
+        },
+
+        _getNextDecade: function () {
+            return this._tryLeap('Decade', 'next', function (d) {
+                    d._year += 10;
+                    return d;
+                });
+        },
+
+        _getPrevDecade: function () {
+            return this._tryLeap('Decade', 'prev', function (d) {
+                    d._year -= 10;
                     return d;
                 });
         },
@@ -696,14 +708,20 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
          * and when this is not present, advance the date forward using the
          * `advancer` callback.
          */
-        _tryLeap: function (date, atomName, directionName, advancer) {
-            date = date || { _year: this._year, _month: this._month, _day: this._day };
+        _tryLeap: function (atomName, directionName, advancer) {
+            var date = { _year: this._year, _month: this._month, _day: this._day };
+            var before = { _year: date._year, _month: date._month, _day: date._day };
 
             var maxOrMin = directionName === 'prev' ? '_min' : '_max';
             var boundary = this[maxOrMin];
 
+            var lowerAtomName = atomName === 'Decade' ? '_decade' :
+                                atomName === 'Year'   ? '_year' :
+                                atomName === 'Month'  ? '_month' :
+                                                        '_day';
+
             // Check if we're by the boundary of min/max year/month
-            if (this._dateCmpUntil(date, boundary, atomName) === 0) {
+            if (this._dateCmpUntil(date, boundary, lowerAtomName) === 0) {
                 return null;  // We're already at the boundary. Bail.
             }
 
@@ -714,32 +732,17 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
                 date = advancer(date);
             }
 
-            date = this._fitDateToRange(date);
-
-            return this['_acceptable' + atomName](date) ? date : null;
-        },
             if (atomName === 'Decade') {
                 date._year = roundDecade(date._year);
             }
 
-        _getNextDecade: function (date) {
-            date = date || { _year: this._year, _month: this._month, _day: this._day };
-            var decade = this._getCurrentDecade(date);
-            if (decade + 10 > this._max._year) { return null; }
-            return decade + 10;
-        },
+            date = this._fitDateToRange(date);
 
-        _getPrevDecade: function (date) {
-            date = date || { _year: this._year, _month: this._month, _day: this._day };
-            var decade = this._getCurrentDecade(date);
-            if (decade - 10 < this._min._year) { return null; }
-            return decade - 10;
-        },
+            if (this._dateCmpUntil(date, before, lowerAtomName) === 0) {
+                return null;
+            }
 
-        /** Returns the decade given a date or year*/
-        _getCurrentDecade: function (year) {
-            year = year ? (year._year || year) : this._year;
-            return Math.floor(year / 10) * 10;  // Round to first place
+            return date;
         },
 
         _callUserCallbackBase: function (cb, date) {
@@ -860,8 +863,13 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
 
             do {
                 i++;
-                if      (self[props[i]] > oth[props[i]]) { return 1; }
-                else if (self[props[i]] < oth[props[i]]) { return -1; }
+                if (depth !== '_decade') {
+                    if      (self[props[i]] > oth[props[i]]) { return 1; }
+                    else if (self[props[i]] < oth[props[i]]) { return -1; }
+                } else {
+                    if      (roundDecade(self) > roundDecade(oth)) { return 1; }
+                    else if (roundDecade(self) < roundDecade(oth)) { return -1; }
+                }
             } while (props[i] !== depth &&
                     self[props[i + 1]] !== undefined && oth[props[i + 1]] !== undefined);
 
