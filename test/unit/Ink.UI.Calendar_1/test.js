@@ -1,4 +1,5 @@
 Ink.requireModules(['Ink.UI.Calendar_1', 'Ink.Dom.Css_1', 'Ink.Dom.Event_1', 'Ink.Dom.Element_1', 'Ink.Util.Array_1'], function (Calendar, Css, InkEvent, InkElement, InkArray) {
+    QUnit.config.reorder = false;
 
 var body = document.body;
 var dtElm;
@@ -43,6 +44,87 @@ test('setDate', function () {
     equal(dt._month + 1, 1);
     equal(dt._day, 1);
 });
+
+test('click to change days', function () {
+    sinon.spy(dt, '_setDate')
+
+    stop();
+    Syn.click(Ink.s('[data-cal-day="11"]', dtElm), function () {
+        ok(dt._setDate.calledWith({ _year: 2000, _month: 9, _day: 11 }));
+        start();
+    });
+});
+
+test('click month to change months', function () {
+    dt.yearView();
+    sinon.spy(dt, '_setDate')
+
+    stop();
+    Syn.click(Ink.s('[data-cal-month="11"]', dtElm), function () {
+        ok(dt._setDate.calledOnce);
+        ok(dt._setDate.calledWith({ _year: 2000, _month: 11, _day: 10 }));
+        start();
+    });
+});
+
+test('click year to change years', function () {
+    dt.decadeView();
+    sinon.spy(dt, '_setDate');
+
+    stop();
+    Syn.click(Ink.s('[data-cal-year="2001"]', dtElm), function () {
+        ok(dt._setDate.calledOnce);
+        ok(dt._setDate.calledWith({ _year: 2001, _month: 9, _day: 10 }));
+        start();
+    });
+});
+
+test('next and prev buttons call _onNextPrevClicked', function () {
+    sinon.spy(dt, '_onNextPrevClicked')
+
+    stop();
+    Syn.click(Ink.s('[href$="next"]', dtElm), function () {
+        ok(dt._onNextPrevClicked.calledWith('Month', 'Next'))
+
+        Syn.click(Ink.s('[href$="prev"]', dtElm), function () {
+            ok(dt._onNextPrevClicked.calledWith('Month', 'Prev'))
+            start();
+        })
+    });
+});
+
+test('_onNextPrevClicked calls get{Next or Prev}{fragment}, then _setDate with the resulting date, then {fragment}view() to render the new view', function () {
+    var nextMonth = { _year: 2100, _month: 1, _day: 1 }
+    var prevYear = { _year: 100, _month: 10, _day: 30 }
+    var nextDecade = { _year: 2010, _month: 1, _day: 1 }
+
+    sinon.stub(dt, '_getNextMonth').returns(nextMonth)
+    sinon.stub(dt, '_getPrevYear').returns(prevYear)
+    sinon.stub(dt, '_getNextDecade').returns(nextDecade)
+
+    sinon.stub(dt, '_setDate')
+
+    sinon.stub(dt, 'monthView')
+    sinon.stub(dt, 'yearView')
+    sinon.stub(dt, 'decadeView')
+
+    dt._onNextPrevClicked('Month', 'Next');
+    ok(dt._getNextMonth.calledOnce, '_getNextMonth called')
+    ok(dt._setDate.calledWith(nextMonth), '_setDate called with the next month as given by _getNextMonth');
+    ok(dt.monthView.calledOnce, 'monthView called');
+
+    dt._onNextPrevClicked('Year', 'Prev');
+    ok(dt._getPrevYear.calledOnce, '_getPrevYear called')
+    ok(dt._setDate.calledWith(prevYear), '_setDate called with given year');
+    ok(dt.yearView.calledOnce, 'yearView called');
+
+    dt._onNextPrevClicked('Decade', 'Next');
+    ok(dt._getNextDecade.calledOnce, '_getNextDecade called');
+    ok(dt._setDate.calledWith(nextDecade), '_setDate called with given decade');
+    ok(dt.decadeView.calledOnce, 'decadeView called');
+
+    equal(dt._setDate.callCount, 3);
+})
 
 test('setDate with Date objects', function () {
     dt.setDate(new Date(2010, 11, 12));
@@ -138,10 +220,16 @@ test('_get(Next|Prev)Month when hitting a limit', function () {
     dt.setDate('2001-04-09');
     deepEqual(dt._getNextMonth(), { _year: 2001, _month: 4, _day: 5 });
 
-    dt.setDate('2000-05-01');
+    dt.setDate('2000-06-03');
+    deepEqual(dt._getPrevMonth(), { _year: 2000, _month: 4, _day: 5 });
+
+    dt.setDate('2000-06-06');
+    deepEqual(dt._getPrevMonth(), { _year: 2000, _month: 4, _day: 6 });
+
+    dt.setDate('2000-05-06');
     deepEqual(dt._getPrevMonth(), null);
 
-    dt.setDate('2001-05-06');
+    dt.setDate('2001-05-04');
     deepEqual(dt._getNextMonth(), null);
 });
 
@@ -170,6 +258,8 @@ test('validDayFn', function () {
     strictEqual(lastCall.thisValue, dt, 'called with this=datepicker');
 });
 
+// TODO validMonthFn, validYearFn, validDecadeFn
+
 test('nextValidDateFn', function () {
     dt.setDate('2000-01-01');
     var next = sinon.spy(sinon.stub().returns(new Date(2012, 1 - 1, 1)));
@@ -185,6 +275,7 @@ test('nextValidDateFn', function () {
     ok(next.calledOnce, 'cb called once');
     ok(next.calledWithExactly(2000, 1, 1), 'cb called with year, month, day');
     ok(next.lastCall.thisValue === dt, 'cb called with this=datepicker');
+
     deepEqual(dt._getPrevMonth(), expectedPrevValidDate, 'prev month is the result of prevValidDateFn');
     ok(prev.calledOnce, 'cb called once');
     ok(prev.calledWithExactly(2000, 1, 1), 'cb called with year, month, day');
@@ -203,41 +294,45 @@ test('nextValidDateFn', function () {
     ok(prev.calledOnce);
 });
 
+test('getNextDecade and nextValidDateFn', function () {
+    dt.setDate('2000-01-01');
+    var next = sinon.spy(sinon.stub().returns(new Date(2012, 1 - 1, 1)));
+    var prev = sinon.spy(sinon.stub().returns(new Date(1990, 1 - 1, 1)));
+
+    dt._options.nextValidDateFn = next;
+    dt._options.prevValidDateFn = prev;
+
+    var expectedNextValidDate = {_year: 2012, _month: 0, _day: 1};
+    var expectedPrevValidDate = {_year: 1990, _month: 0, _day: 1};
+
+    deepEqual(dt._getNextDecade(), expectedNextValidDate);
+    deepEqual(dt._getPrevDecade(), expectedPrevValidDate);
+});
+
 test('getNextYear, getPrevYear', function () {
     dt.setDate('2000-05-05');
     deepEqual(dt._getNextYear(), {_year: 2001, _month: 4, _day: 5});
     deepEqual(dt._getPrevYear(), {_year: 1999, _month: 4, _day: 5});
 
-    dt._setMinMax('1999-10-10:2001-01-01');
-    deepEqual(dt._getNextYear(), {_year: 2001, _month: 0, _day: 1});
+    dt._setMinMax('1999-10-10:2001-01-02');
+    deepEqual(dt._getNextYear(), {_year: 2001, _month: 0, _day: 2});
     deepEqual(dt._getPrevYear(), {_year: 1999, _month: 9, _day: 10});
 
     dt.setDate('2001-01-01');
     deepEqual(dt._getNextYear(), null);
 
-    dt.setDate('1999-10-10');
+    dt.setDate('1999-11-11');
     deepEqual(dt._getPrevYear(), null);
-});
-
-test('getCurrentDecade', function () {
-    dt.setDate('2000-05-05');
-    deepEqual(dt._getCurrentDecade(), 2000);
-    dt.setDate('2010-01-01');
-    deepEqual(dt._getCurrentDecade(), 2010);
-    dt.setDate('2005-01-01');
-    deepEqual(dt._getCurrentDecade(), 2000);
-    dt.setDate('2019-01-01');
-    deepEqual(dt._getCurrentDecade(), 2010);
 });
 
 test('getNextDecade, getPrevDecade', function () {
     dt._getCurrentDecade = sinon.spy(dt._getCurrentDecade);
     dt.setDate('2001-05-05');
-    deepEqual(dt._getNextDecade(), 2010);
-    deepEqual(dt._getPrevDecade(), 1990);
-    ok(dt._getCurrentDecade.calledTwice);
+    deepEqual(dt._getNextDecade()._year, 2010);
+    deepEqual(dt._getPrevDecade()._year, 1990);
 
     dt._setMinMax('2000-05-01:2020-05-05');
+    dt.setDate('2001-05-05');
     deepEqual(dt._getPrevDecade(), null);
     dt.setDate('2020-01-01');
     deepEqual(dt._getNextDecade(), null);
