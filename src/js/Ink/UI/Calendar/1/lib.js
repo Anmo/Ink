@@ -5,6 +5,10 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
         return {_year: date.getFullYear(), _month: date.getMonth(), _day: date.getDate()};
     }
 
+    function dateishFromYMDString(YMD) {
+        return dateishFromDate(new Date(YMD));
+    }
+
     function dateishCopy(dateish) {
         return {_year: dateish._year, _month: dateish._month, _day: dateish._day};
     }
@@ -396,23 +400,13 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
          * @method setDate
          * @param {Date} newDate
          **/
-        setDate: function (dateString) {
-            if (dateString && typeof dateString.getDate === 'function') {
-                dateString = [ dateString.getFullYear(),
-                    dateString.getMonth() + 1, dateString.getDate() ].join('-');
+        setDate: function (newDate) {
+            if (newDate && typeof newDate.getDate === 'function') {
+                newDate = dateishFromDate(newDate);
             }
 
-            if (dateString && dateString._year !== undefined) {
-                dateString = [ dateString._year,
-                    dateString._month + 1, dateString._day ].join('-');
-            }
-
-            var newDate = {};
-            if ( /\d{4}-\d{1,2}-\d{1,2}/.test( dateString ) ) {
-                var auxDate = dateString.split( '-' );
-                newDate._year  = +auxDate[ 0 ];
-                newDate._month = +auxDate[ 1 ] - 1;
-                newDate._day   = +auxDate[ 2 ];
+            if ( /\d{4}-\d{1,2}-\d{1,2}/.test( newDate ) ) {
+                newDate = dateishFromYMDString(newDate);
             }
 
             this._setDate( newDate );
@@ -423,8 +417,9 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
         _setDate: function (newDate) {
             newDate = this._fitDateToRange(newDate);
 
-            if (this._day !== undefined) {
-                if (this._dateCmp(this, newDate) === 0) { return; }
+            if (this._dateCmp(this, newDate) === 0 &&
+                    this._day !== undefined) {
+                return;
             }
 
             var yearChanged = this._year !== newDate._year;
@@ -584,14 +579,7 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
             var date = dateishCopy(this);
             var before = dateishCopy(date);
 
-            var boundary = increment > 0 ? this._max : this._min;
-
             var directionName = increment > 0 ? 'next' : 'prev';
-
-            // Check if we're by the boundary of min/max year/month
-            if (this._dateCmpUntil(date, boundary, atomName) === 0) {
-                return null;  // We're already at the boundary. Bail.
-            }
 
             var leapUserCb = this._options[directionName + 'ValidDateFn'];
             if (leapUserCb) {
@@ -668,8 +656,8 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
                     lim = dateishFromDate(now);
                 } else if (data.date.toUpperCase() === 'EVER') {
                     lim = data.noLim;
-                } else if ( data.date.split(/-/).length === 3 ) {
-                    lim = dateishFromDate(new Date(data.date));
+                } else if ( data.date.split('-').length === 3 ) {
+                    lim = dateishFromYMDString(data.date);
 
                     lim._month = clamp(lim._month, 0, 11);
                     lim._day = clamp(lim._day, 1, this._daysInMonth( lim._year, lim._month));
