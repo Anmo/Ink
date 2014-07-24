@@ -5,10 +5,6 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
         return {_year: date.getFullYear(), _month: date.getMonth(), _day: date.getDate()};
     }
 
-    function dateishFromYMD(year, month, day) {
-        return {_year: year, _month: month, _day: day};
-    }
-
     function dateishCopy(dateish) {
         return {_year: dateish._year, _month: dateish._month, _day: dateish._day};
     }
@@ -134,11 +130,11 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
                 ev.preventDefault();
                 var tbody = Ink.s('tbody', self._element);
                 var isNext = /#next$/.test(ev.currentTarget.href);
-                var fragment = Css.hasClassName(tbody, 'month') ? 'Month' :
-                               Css.hasClassName(tbody, 'year')  ? 'Year' :
-                                                                  'Decade';
+                var fragment = Css.hasClassName(tbody, 'month') ? '_month' :
+                               Css.hasClassName(tbody, 'year')  ? '_year' :
+                                                                  '_decade';
 
-                var increment = isNext ? 'Next' : 'Prev';
+                var increment = isNext ? 1 : -1;
 
                 self._onNextPrevClicked(fragment, increment);
             });
@@ -227,16 +223,13 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
         },
 
         monthView: function () {
-            var month = this._month;
-            var year = this._year;
-
             var container = this._replaceTbody('month');
 
             container.appendChild(
                     this._getMonthCalendarHeader(this._options.startWeekDay));
 
             container.appendChild(
-                    this._getDayButtons(year, month));
+                    this._getDayButtons(dateishCopy(this)));
         },
 
         /** Write the top bar of the calendar (M T W T F S S) */
@@ -287,28 +280,29 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
             return result;
         },
 
-        _getDayButtons: function (year, month) {
-            var daysInMonth = this._daysInMonth(year, month);
+        _getDayButtons: function (date) {
+            var daysInMonth = this._daysInMonth(date._year, date._month);
 
             var ret = document.createDocumentFragment();
 
             var tr = InkElement.create('tr');
             ret.appendChild(tr);
 
-            var firstDayIndex = this._getFirstDayIndex(year, month);
+            var firstDayIndex = this._getFirstDayIndex(date._year, date._month);
 
             // Add padding if the first day of the month is not monday.
             for (var i = 0; i < firstDayIndex; i ++) {
                 tr.appendChild(InkElement.create('td'));
             }
 
-            for (var day = 1; day <= daysInMonth; day++) {
-                if ((day - 1 + firstDayIndex) % 7 === 0){ // new week, new tr
+            for (date._day = 1; date._day <= daysInMonth; date._day++) {
+                if ((date._day - 1 + firstDayIndex) % 7 === 0){ // new week, new tr
                     tr = ret.appendChild(InkElement.create('tr'));
                 }
 
-                tr.appendChild(this._getButton({ number: day,
-                    date: dateishFromYMD(year, month, day),
+                tr.appendChild(this._getButton({
+                    number: date._day,
+                    date: date,
                     dayMonthOrYear: 'day',
                     validator: this._acceptableDay
                 }));
@@ -476,22 +470,20 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
          * @method _onNextPrevClicked
          *
          * @param dateFragment "Year", "Decade", or "Month", depending on current view
-         * @param nextOrPrev {String} "Next" or "Prev" string indicating whether the user clicked "next" or "previous" button.
+         * @param nextOrPrev {Number} +1 or -1
          **/
-        _onNextPrevClicked: function (dateFragment, nextOrPrev) {
-            var getNextPrevFragmentFunc = this['_get' + nextOrPrev + dateFragment];
-
-            var newDate = getNextPrevFragmentFunc.call(this);
+        _onNextPrevClicked: function (dateFragment, increment) {
+            var newDate = this._tryLeap(dateFragment, increment);
 
             if (!newDate) { return; }
 
             this._setDate(newDate);
 
-            if (dateFragment === 'Month') {
+            if (dateFragment === '_month') {
                 this.monthView();
-            } else if (dateFragment === 'Year') {
+            } else if (dateFragment === '_year') {
                 this.yearView();
-            } else if (dateFragment === 'Decade') {
+            } else if (dateFragment === '_decade') {
                 this.decadeView();
             }
         },
@@ -575,77 +567,7 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
          * @return {Number} The number of days on a given month on a given year
          */
         _daysInMonth: function(_y,_m){
-            var exceptions = {
-                2: ((_y % 400 === 0) || (_y % 4 === 0 && _y % 100 !== 0)) ? 29 : 28,
-                4: 30,
-                6: 30,
-                9: 30,
-                11: 30
-            };
-
-            return exceptions[_m + 1] || 31;
-        },
-
-        /**
-         * Get the next month we can show.
-         */
-        _getNextMonth: function (date) {
-            return this._tryLeap('Month', 'next', function (d) {
-                    d._month += 1;
-                    if (d._month > 11) {
-                        d._month = 0;
-                        d._year += 1;
-                    }
-                    return d;
-                });
-        },
-
-        /**
-         * Get the previous month we can show.
-         */
-        _getPrevMonth: function () {
-            return this._tryLeap('Month', 'prev', function (d) {
-                    d._month -= 1;
-                    if (d._month < 0) {
-                        d._month = 11;
-                        d._year -= 1;
-                    }
-                    return d;
-                });
-        },
-
-        /**
-         * Get the previous year we can show.
-         */
-        _getPrevYear: function () {
-            return this._tryLeap('Year', 'prev', function (d) {
-                    d._year -= 1;
-                    return d;
-                });
-        },
-
-        /**
-         * Get the next year we can show.
-         */
-        _getNextYear: function () {
-            return this._tryLeap('Year', 'next', function (d) {
-                    d._year += 1;
-                    return d;
-                });
-        },
-
-        _getNextDecade: function () {
-            return this._tryLeap('Decade', 'next', function (d) {
-                    d._year += 10;
-                    return d;
-                });
-        },
-
-        _getPrevDecade: function () {
-            return this._tryLeap('Decade', 'prev', function (d) {
-                    d._year -= 10;
-                    return d;
-                });
+            return (new Date(_y, _m + 1, 0)).getDate();
         },
 
         /**
@@ -658,20 +580,16 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
          * and when this is not present, advance the date forward using the
          * `advancer` callback.
          */
-        _tryLeap: function (atomName, directionName, advancer) {
+        _tryLeap: function (atomName, increment) {
             var date = dateishCopy(this);
             var before = dateishCopy(date);
 
-            var maxOrMin = directionName === 'prev' ? '_min' : '_max';
-            var boundary = this[maxOrMin];
+            var boundary = increment > 0 ? this._max : this._min;
 
-            var lowerAtomName = atomName === 'Decade' ? '_decade' :
-                                atomName === 'Year'   ? '_year' :
-                                atomName === 'Month'  ? '_month' :
-                                                        '_day';
+            var directionName = increment > 0 ? 'next' : 'prev';
 
             // Check if we're by the boundary of min/max year/month
-            if (this._dateCmpUntil(date, boundary, lowerAtomName) === 0) {
+            if (this._dateCmpUntil(date, boundary, atomName) === 0) {
                 return null;  // We're already at the boundary. Bail.
             }
 
@@ -679,16 +597,19 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
             if (leapUserCb) {
                 return this._callUserCallbackDate(leapUserCb, date);
             } else {
-                date = advancer(date);
-            }
-
-            if (atomName === 'Decade') {
-                date._year = roundDecade(date._year);
+                if (atomName === '_decade') {
+                    increment *= 10;
+                    date._year += increment;
+                    date._year = roundDecade(date._year);
+                } else {
+                    date[atomName] += increment;
+                    date = dateishFromDate(new Date(date._year, date._month, date._day ));
+                }
             }
 
             date = this._fitDateToRange(date);
 
-            if (this._dateCmpUntil(date, before, lowerAtomName) === 0) {
+            if (this._dateCmpUntil(date, before, atomName) === 0) {
                 return null;
             }
 
@@ -798,7 +719,7 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
 
             do {
                 i++;
-                if (depth !== '_decade') {
+                if (props[i] !== '_decade') {
                     if      (self[props[i]] > oth[props[i]]) { return 1; }
                     else if (self[props[i]] < oth[props[i]]) { return -1; }
                 } else {
