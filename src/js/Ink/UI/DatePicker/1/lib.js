@@ -46,7 +46,6 @@ Ink.createModule('Ink.UI.DatePicker', '1', ['Ink.UI.Common_1','Ink.Dom.Event_1',
      * @param {Function}            [options.nextValidDateFn]   Function to calculate the next valid date, given the current. Useful when there's invalid dates or time frames.
      * @param {Function}            [options.prevValidDateFn]   Function to calculate the previous valid date, given the current. Useful when there's invalid dates or time frames.
      * @param {Object}              [options.wDay]              Hash of week day names. Sunday is 0. Defaults to { 0:'Sunday', 1:'Monday', etc...
-     * @param {String}              [options.yearRange]         Enforce limits to year for the Date, ex: '1990:2020' (deprecated)
      *
      * @sample Ink_UI_DatePicker_1.html
      */

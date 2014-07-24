@@ -9,11 +9,6 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
         return {_year: year, _month: month, _day: day};
     }
 
-    function dateishFromYMDString(YMD) {
-        var split = YMD.split('-');
-        return dateishFromYMD(+split[0], +split[1] - 1, +split[2]);
-    }
-
     function dateishCopy(dateish) {
         return {_year: dateish._year, _month: dateish._month, _day: dateish._day};
     }
@@ -58,7 +53,7 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
         validYearFn:     ['Function', null],
         nextValidDateFn: ['Function', null],
         prevValidDateFn: ['Function', null],
-        yearRange:       ['String', null],
+        yearRange:       ['String', null],  /* [3.1.0] deprecate this */
 
         // Text
         month: ['Object', {
@@ -760,7 +755,6 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
             if (!dateRange) { return noLimits(); }
 
             var dates = dateRange.split( ':' );
-            var rDate = /^(\d{4})((\-)(\d{1,2})((\-)(\d{1,2}))?)?$/;
 
             InkArray.each([
                         {name: '_min', date: dates[0], noLim: noMinLimit},
@@ -774,8 +768,8 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
                     lim = dateishFromDate(now);
                 } else if (data.date.toUpperCase() === 'EVER') {
                     lim = data.noLim;
-                } else if ( rDate.test( data.date ) ) {
-                    lim = dateishFromYMDString(data.date);
+                } else if ( data.date.split(/-/).length === 3 ) {
+                    lim = dateishFromDate(new Date(data.date));
 
                     lim._month = clamp(lim._month, 0, 11);
                     lim._day = clamp(lim._day, 1, this._daysInMonth( lim._year, lim._month));
