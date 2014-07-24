@@ -2,8 +2,11 @@
     position: relative;    
 }
 
-.#{$calendar-class-name} {
+.#{$datepicker-class-name} .#{$calendar-class-name} {
     position: absolute;
+}
+
+.#{$calendar-class-name} {
     table-layout: fixed;
     border-collapse: separate;
     padding: $calendar-padding;
