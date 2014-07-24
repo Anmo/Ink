@@ -1,0 +1,103 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+
+        <title>InkJS - Calendar samples</title>
+
+        <link rel="stylesheet" href="../../../../../../dist/css/ink.css" />
+
+        <script type="text/javascript" src="../../../../Ink/1/lib.js"></script>
+        <script>
+            Ink.setPath('Ink', '../../../../Ink/');
+        </script>
+        <script type="text/javascript" src="../../../../../../dist/js/prettify.js"></script>
+        <style>
+            pre.prettyprint{
+                font-size: 0.75em;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div class="ink-container ink-grid">
+            <h1>Calendar Samples - InkJS</h1>
+
+<section data-ink-sample>
+<header>
+    <h2>Calendar #1 - Default Markup</h2>
+</header>
+
+<table class="ink-calendar" id="calendar1" data-subject></table>
+
+<p>This is just a calendar with the default markup. You can select any date you like, and there is no upper or lower limit to what dates you can select.</p>
+
+<p>JS: You can also see an example usage of the onSetDate callback, which we use here to console.log
+<the dates as you select them./p>
+
+<script>
+    Ink.requireModules(['Ink.Dom.Selector_1', 'Ink.UI.Calendar_1'],function(Selector,Calendar){
+        new Calendar('#calendar1', {
+            onSetDate: function (ev) {
+                console.log('onSetDate', ev.date);
+            }
+        });
+    });
+</script>
+</section>
+
+<section data-ink-sample>
+<header>
+    <h2>Calendar #2 - Sparse valid dates in a sea of invalid dates.</h2>
+</header>
+<table class="ink-calendar" id="calendar2" data-subject></table>
+<p>You can only select the January 3rd and January 6th of each year in the calendar above. When you click the "next" button, you are taken to January 3rd, next year. This is done by passing the nextValidDateFn and prevValidDateFn options</p>
+
+<script>
+    Ink.requireModules(['Ink.UI.Calendar_1'], function (Calendar) {
+        new Calendar('#calendar2', {
+            startDate: '2000-01-03',
+            validDayFn: function (year, month, day) {
+                return month === 1 && (day === 3 || day === 6);
+            },
+            validMonthFn: function (year, month, day) {
+                return month === 1;
+            },
+            nextValidDateFn: function (year, month, day) {
+                return new Date(year + 1, 0, 3);
+            },
+            prevValidDateFn: function (year, month, day) {
+                return new Date(year - 1, 0, 3)
+            }
+        });
+    });
+</script>
+</section>
+
+<section data-ink-sample>
+<header>
+    <h2>Calendar #3 - Valid and invalid dates.</h2>
+</header>
+<table class="ink-calendar" id="calendar3" data-subject></table>
+<p>You can only select days which divide by 3, and in months which are not February, and not fridays either.</p>
+<p>Note that the prevValidDateFn and nextValidDateFn were not implemented, and so we still see February even though there are no valid dates there. This is intentional in this case.</p>
+
+<script>
+    Ink.requireModules(['Ink.UI.Calendar_1'], function (Calendar) {
+        new Calendar('#calendar3', {
+            startDate: '2000-01-03',
+            validDayFn: function (year, month, day) {
+                return day % 3 === 0;
+            },
+            validMonthFn: function (year, month, day) {
+                return month !== 2;
+            }
+        });
+    });
+</script>
+</div>
+</section>
+        </div>
+        <script src="../../../codesamples.js"></script>
+    </body>
+</html>

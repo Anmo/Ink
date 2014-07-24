@@ -126,65 +126,7 @@
     });
 &lt;/script&gt;</pre>
                 </section>
-                <section>
-                    <header>
-                        <h2>DatePicker #3 - Having only a valid date every now and then.</h2>
-                    </header>
-                    <div class="control-group ink-example">
-                        <div class="control">
-                            <input id="dPicker3" type="text" data-format="dd/mm/yyyy">
-                            <label for="dPicker3">
-                                A datepicker with nextValidDateFn and prevValidDateFn, to help us find holes in the dates. This picker will only let you choose January 1<sup>st</sup> of each year
-                            </label>
-                        </div>
 
-                        <script>
-                            Ink.requireModules(['Ink.UI.DatePicker_1'], function (DatePicker) {
-                                new DatePicker(dPicker3, {
-                                    startDate: '2000-01-01',
-                                    validDayFn: function (year, month, day) {
-                                        return month === 1 && day === 1;
-                                    },
-                                    validMonthFn: function (year, month, day) {
-                                        return month === 1;
-                                    },
-                                    nextValidDateFn: function (year, month, day) {
-                                        return new Date(year + 1, 0, 1);
-                                    },
-                                    prevValidDateFn: function (year, month, day) {
-                                        return new Date(year - 1, 0, 1)
-                                    }
-                                });
-                            });
-                        </script>
-                    </div>
-                    <pre class="prettyprint linenums"><code>&lt;div class="control"&gt;
-    &lt;input id="dPicker3" type="text" data-format="dd/mm/yyyy"&gt;
-    &lt;label for="dPicker3"&gt;
-        A datepicker with nextValidDateFn and prevValidDateFn, to help us find holes in the dates. This picker will only let you choose January 1&lt;sup&gt;st&lt;/sup&gt; of each year
-    &lt;/label&gt;
-&lt;/div&gt;
-
-&lt;script&gt;
-    Ink.requireModules(['Ink.UI.DatePicker_1'], function (DatePicker) {
-        new DatePicker(dPicker3, {
-            startDate: '2000-01-01',
-            validDayFn: function (year, month, day) {
-                return month === 1 &amp;&amp; day === 1;
-            },
-            validMonthFn: function (year, month, day) {
-                return month === 1;
-            },
-            nextValidDateFn: function (year, month, day) {
-                return new Date(year + 1, 0, 1);
-            },
-            prevValidDateFn: function (year, month, day) {
-                return new Date(year - 1, 0, 1)
-            }
-        });
-    });
-&lt;/script&gt;</code></pre>
-                </section>
                 <section>
                     <header>
                         <h2>DatePicker #4 - autoOpen, shy and onFocus</h2>
