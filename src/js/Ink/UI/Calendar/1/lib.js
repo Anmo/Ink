@@ -103,7 +103,6 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
         _bindEvents: function () {
             var self = this;
 
-            // TODO use getprevMonth, getPrevYear, getNextYear, etc.
             function extendDate(partialDateish) {
                 var dt = { _year: self._year, _month: self._month, _day: self._day };
 
@@ -132,7 +131,8 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
                 self.decadeView();
             });
 
-            Event.on(this._element, 'click', '[href^="#next"], [href^="#prev"]', function (ev) {
+            Event.on(this._element, 'click', ':not(.disabled) [href^="#next"], :not(.disabled) [href^="#prev"]', function (ev) {
+                ev.preventDefault();
                 var tbody = Ink.s('tbody', self._element);
                 var isNext = /#next$/.test(ev.currentTarget.href);
                 var fragment = Css.hasClassName(tbody, 'month') ? 'Month' :
@@ -327,7 +327,6 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
          * @private
          */
         _getDayButton: function (year, month, day) {
-            var attrs = {};
             var date = dateishFromYMD(year, month, day);
 
             var className = '';
@@ -335,17 +334,18 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
             if (!this._acceptableDay(date)) {
                 className = 'disabled';
             } else {
-                attrs['data-cal-day'] = day;
-
                 if (this._day && this._dateCmp(date, this) === 0) {
                     className = 'active';
                 }
             }
 
-            attrs.setTextContent = day;
-
             var dayButton = InkElement.create('td', { className: className });
-            dayButton.appendChild(InkElement.create('a', attrs));
+            var dayLink = dayButton.appendChild(InkElement.create('a', { setTextContent: day }));
+
+            if (this._acceptableDay(date)) {
+                dayLink.setAttribute('data-cal-day', day);
+            }
+
             return dayButton;
         },
 
@@ -356,14 +356,16 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
             for(var mon=0; mon<12; mon++){
                 var monthButton = row.appendChild(InkElement.create('td'));
 
-                monthButton.appendChild(InkElement.create('a', {
-                    'data-cal-month': mon,
+                var monthLink = monthButton.appendChild(InkElement.create('a', {
                     setTextContent: this._options.month[mon + 1].substring(0, 3)
                 }));
 
-                if (!this._acceptableMonth({ _year: this._year, _month: mon })) {
+                if (this._acceptableMonth({ _year: this._year, _month: mon })) {
+                    monthLink.setAttribute('data-cal-month', mon);
+                } else {
                     monthButton.className = 'disabled';
                 }
+
                 if (mon === this._month) {
                     monthButton.className = 'active';
                 }
@@ -581,11 +583,11 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
         },
 
         _acceptableDay: function (date) {
-            return this._acceptableDateComponent(date, 'validDayFn');
+            return this._acceptableDateComponent(date, 'validDayFn') && this._acceptableMonth(date);
         },
 
         _acceptableMonth: function (date) {
-            return this._acceptableDateComponent(date, 'validMonthFn');
+            return this._acceptableDateComponent(date, 'validMonthFn') && this._acceptableYear(date);
         },
 
         _acceptableYear: function (date) {
