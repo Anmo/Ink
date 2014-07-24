@@ -14,6 +14,10 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
         return dateishFromYMD(+split[0], +split[1] - 1, +split[2]);
     }
 
+    function dateishCopy(dateish) {
+        return {_year: dateish._year, _month: dateish._month, _day: dateish._day};
+    }
+
     function roundDecade(year) {
         if (year._year) {
             return roundDecade(year._year);
@@ -104,7 +108,7 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
             var self = this;
 
             function extendDate(partialDateish) {
-                var dt = { _year: self._year, _month: self._month, _day: self._day };
+                var dt = dateishCopy(self);
 
                 if (typeof partialDateish._year === 'number') {
                     dt._year = partialDateish._year;
@@ -389,10 +393,18 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
                 var td = tr.appendChild(
                         InkElement.create('td'));
 
-                td.appendChild(InkElement.create('a', {
-                    setTextContent: year,
-                    'data-cal-year': year
+                var yearLink = td.appendChild(InkElement.create('a', {
+                    setTextContent: year
                 }));
+
+                if (this._acceptableYear({ _year: year })) {
+                    yearLink.setAttribute('data-cal-year', year);
+                    if (year === this._year) {
+                        td.className = 'active';
+                    }
+                } else {
+                    td.className = 'disabled';
+                }
 
                 if (year % 5 === 4) {
                     td.setAttribute('colspan', 3);
@@ -472,7 +484,7 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
             function callDeprecatedUserCallback(callback) {
                 if (typeof callback === 'function') {
                     Ink.warn('The Ink.UI.Calendar (and thus, Ink.UI.DatePicker) callbacks "onSelectMonth" and "onSelectYear" are eventually going to be deprecated.');
-                    callback.call(this, this, changeEvent);
+                    callback.call(self, self, changeEvent);
                 }
             }
 
@@ -496,6 +508,8 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
             var getNextPrevFragmentFunc = this['_get' + nextOrPrev + dateFragment];
 
             var newDate = getNextPrevFragmentFunc.call(this);
+
+            if (!newDate) { return; }
 
             this._setDate(newDate);
 
@@ -671,8 +685,8 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
          * `advancer` callback.
          */
         _tryLeap: function (atomName, directionName, advancer) {
-            var date = { _year: this._year, _month: this._month, _day: this._day };
-            var before = { _year: date._year, _month: date._month, _day: date._day };
+            var date = dateishCopy(this);
+            var before = dateishCopy(date);
 
             var maxOrMin = directionName === 'prev' ? '_min' : '_max';
             var boundary = this[maxOrMin];
