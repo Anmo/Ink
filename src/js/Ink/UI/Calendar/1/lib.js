@@ -1,3 +1,9 @@
+/**
+ * Calendar widget (if you want a datepicker, see Ink.UI.DatePicker_1)
+ * @module Ink.UI.Calendar_1
+ * @version 1
+ */
+
 Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'Ink.Dom.Element_1', 'Ink.Dom.Css_1', 'Ink.Util.Array_1'], function (Common, Event, InkElement, Css, InkArray) {
     'use strict';
 
@@ -29,7 +35,30 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
         return n;
     }
 
-
+    /**
+     * @class Ink.UI.Calendar
+     * @constructor
+     * @version 1
+     *
+     * @param {String|DOMElement}   selector
+     * @param {Object}              [options]                   Options
+     * @param {String}              [options.startDate]         Initial date. Must be in yyyy-mm-dd format. Defaults to the current day.
+     * @param {String}              [options.dateRange]         Minimum and maximum dates which can be selected, ex: '1990-08-25:2020-11-10'
+     * @param {Number}              [options.startWeekDay]      First day of the week. Sunday is zero. Defaults to 1 (Monday).
+     * @param {String}              [options.prevLinkText]      Text for the previous button. Defaults to '«'.
+     * @param {String}              [options.nextLinkText]      Text for the previous button. Defaults to '«'.
+     * @param {String}              [options.ofText]            HTML string in the TD between month and year. Defaults to ' of '.
+     * @param {Function}            [options.onSetDate]         Callback to execute when the date is set.
+     * @param {Function}            [options.validYearFn]       Function to validate the each year. Use this to filter the available dates. (in the decade view)
+     * @param {Function}            [options.validMonthFn]      Function to validate the each month. Use this to filter the available dates. (in the year view)
+     * @param {Function}            [options.validDayFn]        Function to validate the each day. Use this to filter the available dates. (in the month view)
+     * @param {Function}            [options.nextValidDateFn]   Function to calculate the next valid date, given the current one. Use this only if your valid days are many months or years apart, otherwise stick to validYearFn, validMonthFn and validDayFn.
+     * @param {Function}            [options.prevValidDateFn]   Function to calculate the previous valid date, given the current. Use this only if your valid days are many months or years apart, otherwise stick to validYearFn, validMonthFn and validDayFn.
+     * @param {Object}              [options.wDay]              Week day names. Example: { 0:'Sunday', 1:'Monday', ...}. Defaults to english week day names.
+     * @param {Object}              [options.month]             Month names. Example: { 1: 'January', 2: 'February', ...}. Defaults to the english month names.
+     *
+     * @sample Ink_UI_Calendar_1.html
+     */
     function Calendar() {
         Common.BaseUIComponent.apply(this, arguments);
     }
@@ -39,7 +68,6 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
     Calendar._optionDefinition = {
         dateRange:       ['String', null],
 
-        format:          ['String', 'yyyy-mm-dd'],
         nextLinkText:    ['String', '»'],
         prevLinkText:    ['String', '«'],
         ofText:          ['String', ' of '],
@@ -130,6 +158,7 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
                 self.decadeView();
             });
 
+            // Next and previous buttons
             Event.on(this._element, 'click', ':not(.disabled) [href^="#next"], :not(.disabled) [href^="#prev"]', function (ev) {
                 ev.preventDefault();
                 var tbody = Ink.s('tbody', self._element);
@@ -226,6 +255,11 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
             return this._element.appendChild(InkElement.create('tbody', { className: className || '' }));
         },
 
+        /**
+         * Show the month view.
+         *
+         * @method monthView
+         */
         monthView: function () {
             var container = this._replaceTbody('month');
 
@@ -314,6 +348,12 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
             return ret;
         },
 
+        /**
+         * Show the year view
+         *
+         * @method yearView
+         * @public
+         */
         yearView: function () {
             var yearView = this._replaceTbody('year');
 
@@ -337,6 +377,12 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
             return yearView;
         },
 
+        /**
+         * Show the decade view
+         *
+         * @method decadeView
+         * @public
+         */
         decadeView: function () {
             var view = this._replaceTbody('decade');
 
@@ -389,23 +435,25 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
          * Gets the currently selected date as a JavaScript date.
          *
          * @method getDate
+         * @public
          */
         getDate: function () {
             return new Date(this._year, this._month, this._day);
         },
 
         /**
-         * Sets the date
+         * Sets the currently selected date.
          *
          * @method setDate
-         * @param {Date} newDate
+         * @public
+         * @param {Date} newDate A Date object or a 'YYYY-MM-DD' string. Make sure it's a valid date (that is, make sure it's within options.dateRange, and that you haven't defined a validDateFn which states this date is invalid.)
          **/
         setDate: function (newDate) {
             if (newDate && typeof newDate.getDate === 'function') {
                 newDate = dateishFromDate(newDate);
             }
 
-            if ( /\d{4}-\d{1,2}-\d{1,2}/.test( newDate ) ) {
+            if ( typeof newDate === 'string' && newDate.split('-').length === 3 ) {
                 newDate = dateishFromYMDString(newDate);
             }
 
@@ -442,20 +490,20 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
                 this._options.onSetDate.call(this, changeEvent);
             }
 
-            /* [3.1.0] deprecate onSelectYear, onSelectMonth. onSetDate is enough. */
+            /* [3.1.0] deprecate onYearSelected, onMonthSelected. onSetDate is enough. */
             var self = this;
             function callDeprecatedUserCallback(callback) {
                 if (typeof callback === 'function') {
-                    Ink.warn('The Ink.UI.Calendar (and thus, Ink.UI.DatePicker) callbacks "onSelectMonth" and "onSelectYear" are eventually going to be deprecated.');
+                    Ink.warn('The Ink.UI.Calendar (and thus, Ink.UI.DatePicker) callbacks "onYearSelected" and "onMonthSelected" are eventually going to be deprecated.');
                     callback.call(self, self, changeEvent);
                 }
             }
 
             if (yearChanged) {
-                callDeprecatedUserCallback(this._options.onSelectYear);
+                callDeprecatedUserCallback(this._options.onYearSelected);
             }
             if (monthChanged) {
-                callDeprecatedUserCallback(this._options.onSelectMonth);
+                callDeprecatedUserCallback(this._options.onMonthSelected);
             }
         },
 
@@ -562,6 +610,9 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
          * @return {Number} The number of days on a given month on a given year
          */
         _daysInMonth: function(_y,_m){
+            // We get the days in this month by creating a javascript Date object
+            // with an overflowing month (which makes it advance to the next month)
+            // and an underflowing day (which makes it recede to the last day of the previous month)
             return (new Date(_y, _m + 1, 0)).getDate();
         },
 
@@ -574,6 +625,11 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
          * result from the user-supplied callback (nextDateFn or prevDateFn),
          * and when this is not present, advance the date forward using the
          * `advancer` callback.
+         *
+         * @example:
+         *     cal._tryLeap('_year', 1) // -> The next year, if valid. Otherwise, null.
+         *     cal._tryLeap('_decade', 1) // -> The next decade, if valid. Otherwise, null.
+         *     cal._tryLeap('_month', -1) // -> The previous month, if valid. Otherwise, null.
          */
         _tryLeap: function (atomName, increment) {
             var date = dateishCopy(this);
@@ -614,7 +670,9 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
         },
 
         /**
-         * Sets the range of dates allowed to be selected in the Date Picker
+         * Sets the range of dates allowed to be selected in the Date Picker.
+         *
+         * Parses the string passed in by the user for options.dateRange.
          *
          * @method _setMinMax
          * @param {String} dateRange Two dates separated by a ':'. Example: 2013-01-01:2013-12-12
@@ -666,7 +724,7 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
                 this[data.name] = lim;
             }, this));
 
-            // Should be equal, or min should be smaller
+            // _max should be greater than, or equal to, _min.
             var valid = this._dateCmp(this._max, this._min) !== -1;
 
             if (!valid) {
@@ -690,6 +748,10 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
                     this._dateCmp(date, this._min) >= 0);
         },
 
+        /**
+         * Compare two dateish objects. Returns positive if self > oth,
+         * negative if self < oth, or 0 if they are equal.
+         */
         _dateCmp: function (self, oth) {
             return this._dateCmpUntil(self, oth, '_day');
         },

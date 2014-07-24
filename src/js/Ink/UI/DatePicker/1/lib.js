@@ -20,32 +20,29 @@ Ink.createModule('Ink.UI.DatePicker', '1', ['Ink.UI.Common_1','Ink.Dom.Event_1',
      * @param {String}              [options.closeText]         Text for the close button. Defaults to 'Close'.
      * @param {String}              [options.cssClass]          CSS class to be applied on the datepicker
      * @param {String|DOMElement}   [options.pickerField]       (if not using in an input[type="text"]) Element which displays the DatePicker when clicked. Defaults to an "open" link.
-     * @param {String}              [options.dateRange]         Enforce limits to year, month and day for the Date, ex: '1990-08-25:2020-11'
      * @param {Boolean}             [options.displayInSelect]   Flag to display the component in a select element.
      * @param {String|DOMElement}   [options.dayField]          (if using options.displayInSelect) `select` field with days.
      * @param {String|DOMElement}   [options.monthField]        (if using options.displayInSelect) `select` field with months.
      * @param {String|DOMElement}   [options.yearField]         (if using options.displayInSelect) `select` field with years.
      * @param {String}              [options.format]            Date format string
-     * @param {Object}              [options.month]             Hash of month names. Defaults to portuguese month names. January is 1.
-     * @param {String}              [options.nextLinkText]      Text for the previous button. Defaults to '«'.
-     * @param {String}              [options.ofText]            Text to show between month and year. Defaults to ' of '.
-     * @param {Boolean}             [options.onFocus]           If the datepicker should open when the target element is focused. Defaults to true.
-     * @param {Function}            [options.onMonthSelected]   Callback to execute when the month is selected.
-     * @param {Function}            [options.onSetDate]         Callback to execute when the date is set.
-     * @param {Function}            [options.onYearSelected]    Callback to execute when the year is selected.
-     * @param {String}              [options.position]          Position for the datepicker. Either 'right' or 'bottom'. Defaults to 'right'.
-     * @param {String}              [options.prevLinkText]      Text for the previous button. Defaults to '«'.
      * @param {Boolean}             [options.showClean]         If the clean button should be visible. Defaults to true.
      * @param {Boolean}             [options.showClose]         If the close button should be visible. Defaults to true.
      * @param {Boolean}             [options.shy]               If the datepicker should start automatically. Defaults to true.
-     * @param {String}              [options.startDate]         Date to define initial month. Must be in yyyy-mm-dd format.
+     * @param {Object}              [options.options for calendar] The following options are used to create the Calendar:
+     * @param {String}              [options.startDate]         Initial date. Must be in yyyy-mm-dd format. Defaults to the current day.
+     * @param {String}              [options.dateRange]         Minimum and maximum dates which can be selected, ex: '1990-08-25:2020-11-10'
      * @param {Number}              [options.startWeekDay]      First day of the week. Sunday is zero. Defaults to 1 (Monday).
-     * @param {Function}            [options.validYearFn]       Callback to execute when 'rendering' the month (in the month view)
-     * @param {Function}            [options.validMonthFn]      Callback to execute when 'rendering' the month (in the month view)
-     * @param {Function}            [options.validDayFn]        Callback to execute when 'rendering' the day (in the month view)
-     * @param {Function}            [options.nextValidDateFn]   Function to calculate the next valid date, given the current. Useful when there's invalid dates or time frames.
-     * @param {Function}            [options.prevValidDateFn]   Function to calculate the previous valid date, given the current. Useful when there's invalid dates or time frames.
-     * @param {Object}              [options.wDay]              Hash of week day names. Sunday is 0. Defaults to { 0:'Sunday', 1:'Monday', etc...
+     * @param {String}              [options.prevLinkText]      Text for the previous button. Defaults to '«'.
+     * @param {String}              [options.nextLinkText]      Text for the previous button. Defaults to '«'.
+     * @param {String}              [options.ofText]            HTML string in the TD between month and year. Defaults to ' of '.
+     * @param {Function}            [options.onSetDate]         Callback to execute when the date is set.
+     * @param {Function}            [options.validYearFn]       Function to validate the each year. Use this to filter the available dates. (in the decade view)
+     * @param {Function}            [options.validMonthFn]      Function to validate the each month. Use this to filter the available dates. (in the year view)
+     * @param {Function}            [options.validDayFn]        Function to validate the each day. Use this to filter the available dates. (in the month view)
+     * @param {Function}            [options.nextValidDateFn]   Function to calculate the next valid date, given the current one. Use this only if your valid days are many months or years apart, otherwise stick to validYearFn, validMonthFn and validDayFn.
+     * @param {Function}            [options.prevValidDateFn]   Function to calculate the previous valid date, given the current. Use this only if your valid days are many months or years apart, otherwise stick to validYearFn, validMonthFn and validDayFn.
+     * @param {Object}              [options.wDay]              Week day names. Example: { 0:'Sunday', 1:'Monday', ...}. Defaults to english week day names.
+     * @param {Object}              [options.month]             Month names. Example: { 1: 'January', 2: 'February', ...}. Defaults to the english month names.
      *
      * @sample Ink_UI_DatePicker_1.html
      */
