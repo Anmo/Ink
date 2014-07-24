@@ -44,11 +44,7 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
         nextLinkText:    ['String', '»'],
         prevLinkText:    ['String', '«'],
         ofText:          ['String', ' of '],
-        onMonthSelected: ['Function', null],
-        onSetMonth:      ['Function', null],
         onSetDate:       ['Function', null],
-        onYearSelected:  ['Function', null],
-        onSetYear:       ['Function', null],
         startDate:       ['String', null], // format yyyy-mm-dd,
         startWeekDay:    ['Number', 1],
 
@@ -453,8 +449,7 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
             }
 
             var yearChanged = this._year !== newDate._year;
-            var monthChanged = this._month !== newDate._month;
-            var dayChanged = this._day !== newDate._day;
+            var monthChanged = this._month !== newDate._month || yearChanged;
 
             this._year = newDate._year;
             this._month = newDate._month;
@@ -462,31 +457,31 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
 
             this._updateTopBar();
 
-            var self = this;
-            function callUserCallback(callback) {
-                if (typeof callback === 'function') {
-                    callback.call(self, { date: self.getDate() });
-                }
+            var changeEvent = {
+                date: this.getDate(),
+                year: this._year,
+                month: this._month,
+                day: this._day
+            };
+
+            if (typeof this._options.onSetDate === 'function') {
+                this._options.onSetDate.call(this, changeEvent);
             }
 
+            /* [3.1.0] deprecate onSelectYear, onSelectMonth. onSetDate is enough. */
+            var self = this;
             function callDeprecatedUserCallback(callback) {
                 if (typeof callback === 'function') {
-                    Ink.warn('The Ink.UI.Calendar callbacks "onSelectMonth" and "onSelectYear" are changing name to "onSetMonth" and "onSetYear". Check the documentation and update your code (the arguments it receives have changed aswell to conform to the rest of Ink UI callbacks)');
-                    callback.call(self, self, { date: self.getDate() });
+                    Ink.warn('The Ink.UI.Calendar (and thus, Ink.UI.DatePicker) callbacks "onSelectMonth" and "onSelectYear" are eventually going to be deprecated.');
+                    callback.call(this, this, changeEvent);
                 }
             }
 
-            callUserCallback(this._options.onSetDate);
             if (yearChanged) {
                 callDeprecatedUserCallback(this._options.onSelectYear);
-                callUserCallback(this._options.onSetYear);
             }
             if (monthChanged) {
                 callDeprecatedUserCallback(this._options.onSelectMonth);
-                callUserCallback(this._options.onSetMonth);
-            }
-            if (dayChanged) {
-                callUserCallback(this._options.onSetDay);
             }
         },
 
