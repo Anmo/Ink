@@ -1,4 +1,4 @@
-Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'Ink.Dom.Element_1', 'Ink.Dom.Css_1', 'Ink.Util.Array_1', 'Ink.Util.Date_1'], function (Common, Event, InkElement, Css, InkArray, InkDate) {
+Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'Ink.Dom.Element_1', 'Ink.Dom.Css_1', 'Ink.Util.Array_1'], function (Common, Event, InkElement, Css, InkArray) {
     'use strict';
 
     function dateishFromDate(date) {
@@ -237,12 +237,6 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
 
             container.appendChild(
                     this._getDayButtons(year, month));
-
-            var today = Ink.s('[data-cal-day="' + this._day + '"]', this._element);
-
-            if (today) {
-                Css.addClassName(today.parentNode, 'active');
-            }
         },
 
         /** Write the top bar of the calendar (M T W T F S S) */
@@ -310,66 +304,35 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
 
             for (var day = 1; day <= daysInMonth; day++) {
                 if ((day - 1 + firstDayIndex) % 7 === 0){ // new week, new tr
-                    tr = InkElement.create('tr');
-                    ret.appendChild(tr);
+                    tr = ret.appendChild(InkElement.create('tr'));
                 }
 
-                tr.appendChild(this._getDayButton(year, month, day));
+                tr.appendChild(this._getButton({ number: day,
+                    date: dateishFromYMD(year, month, day),
+                    dayMonthOrYear: 'day',
+                    validator: this._acceptableDay
+                }));
             }
             return ret;
-        },
-
-        /**
-         * Get the HTML markup for a single day in month view, given year, month, day.
-         *
-         * @method _getDayButtonHtml
-         * @private
-         */
-        _getDayButton: function (year, month, day) {
-            var date = dateishFromYMD(year, month, day);
-            var isValid = this._acceptableDay(date);
-
-            var dayButton = InkElement.create('td');
-            var dayLink = dayButton.appendChild(InkElement.create('a', { setTextContent: day }));
-
-            if (isValid) {
-                if (this._day && this._dateCmp(date, this) === 0) {
-                    dayButton.className = 'active';
-                }
-
-                dayLink.setAttribute('data-cal-day', day);
-            } else {
-                dayButton.className = 'disabled';
-            }
-
-            return dayButton;
         },
 
         yearView: function () {
             var yearView = this._replaceTbody('year');
 
-            var row = document.createElement('tr');
+            var tr = document.createElement('tr');
             for(var mon=0; mon<12; mon++){
-                var monthButton = row.appendChild(InkElement.create('td'));
+                var monthButton = this._getButton({ number: mon,
+                    date: { _year: this._year, _month: mon },
+                    dayMonthOrYear: 'month', validator: this._acceptableMonth,
+                    linkText: this._options.month[mon + 1].substring(0, 3)
+                });
 
-                var monthLink = monthButton.appendChild(InkElement.create('a', {
-                    setTextContent: this._options.month[mon + 1].substring(0, 3)
-                }));
-
-                if (this._acceptableMonth({ _year: this._year, _month: mon })) {
-                    monthLink.setAttribute('data-cal-month', mon);
-                } else {
-                    monthButton.className = 'disabled';
-                }
-
-                if (mon === this._month) {
-                    monthButton.className = 'active';
-                }
+                tr.appendChild(monthButton);
 
                 if (mon % 4 === 3) {
                     monthButton.setAttribute('colspan', 4);
-                    yearView.appendChild(row);
-                    row = document.createElement('tr');
+                    yearView.appendChild(tr);
+                    tr = document.createElement('tr');
                 }
             }
 
@@ -385,27 +348,43 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
             var tr = view.appendChild(InkElement.create('tr'));
 
             for (var year = thisDecade; year < nextDecade; year++) {
-                var td = tr.appendChild(
-                        InkElement.create('td'));
+                var td = this._getButton({
+                    number: year,
+                    date: { _year: year },
+                    dayMonthOrYear: 'year',
+                    validator: this._acceptableYear
+                });
 
-                var yearLink = td.appendChild(InkElement.create('a', {
-                    setTextContent: year
-                }));
-
-                if (this._acceptableYear({ _year: year })) {
-                    yearLink.setAttribute('data-cal-year', year);
-                    if (year === this._year) {
-                        td.className = 'active';
-                    }
-                } else {
-                    td.className = 'disabled';
-                }
+                tr.appendChild(td);
 
                 if (year % 5 === 4) {
                     td.setAttribute('colspan', 3);
                     tr = view.appendChild(InkElement.create('tr'));
                 }
             }
+        },
+
+        _getButton: function (opt /* contains: number, date, dayMonthOrYear, validator, linkText */) {
+            var button = InkElement.create('td');
+            var link = button.appendChild(InkElement.create('a', {
+                setTextContent: opt.linkText || opt.number
+            }));
+
+            var isValid = opt.validator.call(this, opt.date);
+            var isToday = this._dateCmpUntil(this, opt.date,
+                '_' + opt.dayMonthOrYear) === 0;
+
+            if (isValid) {
+                link.setAttribute('data-cal-' + opt.dayMonthOrYear, opt.number);
+            } else {
+                button.className = 'disabled';
+            }
+
+            if (isToday && isValid) {
+                button.className = 'active';
+            }
+
+            return button;
         },
 
         /**
