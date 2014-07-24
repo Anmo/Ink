@@ -15,8 +15,13 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
         return dateishFromDate(new Date(YMD));
     }
 
-    function dateishCopy(dateish) {
-        return {_year: dateish._year, _month: dateish._month, _day: dateish._day};
+    function dateishCopy(dateish, extension) {
+        extension = extension || {};
+        return {
+            _year: '_year' in extension ? extension._year : dateish._year,
+            _month: '_month' in extension ? extension._month : dateish._month,
+            _day: '_day' in extension ? extension._day : dateish._day
+        };
     }
 
     function roundDecade(year) {
@@ -130,24 +135,6 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
         _bindEvents: function () {
             var self = this;
 
-            function extendDate(partialDateish) {
-                var dt = dateishCopy(self);
-
-                if (typeof partialDateish._year === 'number') {
-                    dt._year = partialDateish._year;
-                }
-
-                if (typeof partialDateish._month === 'number') {
-                    dt._month = partialDateish._month;
-                }
-
-                if (typeof partialDateish._day === 'number') {
-                    dt._day = partialDateish._day;
-                }
-
-                self._setDate(dt);
-            }
-
             // Top bar
             Event.on(this._element, 'click', '[href^="#monthchanger"]', function (ev) {
                 ev.preventDefault();
@@ -171,6 +158,11 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
 
                 self._onNextPrevClicked(fragment, increment);
             });
+
+            function extendDate(partialDateish) {
+                var dt = dateishCopy(self, partialDateish);
+                self._setDate(dt);
+            }
 
             // Month view
             Event.on(this._element, 'click', '[data-cal-day]', function (ev) {
