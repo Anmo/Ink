@@ -814,7 +814,7 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
          * _dateCmpUntil({_year: 2000, _month: 10}, {_year: 2000, _month: 11}, '_year') === 0
          */
         _dateCmpUntil: function (self, oth, depth) {
-            var props = ['_year', '_month', '_day'];
+            var props = ['_decade', '_year', '_month', '_day'];
             var i = -1;
 
             do {
