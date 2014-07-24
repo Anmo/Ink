@@ -245,15 +245,14 @@ test('validDayFn', function () {
     ok(InkArray.some(buttons, findEnabled),
         'All buttons are disabled');
 
-    var spy = dt._options.validDayFn = sinon.spy(sinon.stub().returns(true));
+    var spy = dt._options.validDayFn = sinon.stub().returns(true);
     dt.monthView();
-    ok(spy.called);
     ok(InkArray.some(buttons, findEnabled),
         'No buttons are disabled, I made all days valid with validDayFn');
 
     var lastCall = spy.getCall(30);
-    ok(lastCall);
-    ok(!spy.getCall(31));
+    ok(lastCall, 'There\'s a 30th call');
+    ok(!spy.getCall(31), 'but not a 31st call');
     deepEqual(lastCall.args, [2000, 1, 31], 'called with last day of january');
     strictEqual(lastCall.thisValue, dt, 'called with this=datepicker');
 });

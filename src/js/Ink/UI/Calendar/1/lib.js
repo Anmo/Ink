@@ -328,22 +328,19 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
          */
         _getDayButton: function (year, month, day) {
             var date = dateishFromYMD(year, month, day);
+            var isValid = this._acceptableDay(date);
 
-            var className = '';
-
-            if (!this._acceptableDay(date)) {
-                className = 'disabled';
-            } else {
-                if (this._day && this._dateCmp(date, this) === 0) {
-                    className = 'active';
-                }
-            }
-
-            var dayButton = InkElement.create('td', { className: className });
+            var dayButton = InkElement.create('td');
             var dayLink = dayButton.appendChild(InkElement.create('a', { setTextContent: day }));
 
-            if (this._acceptableDay(date)) {
+            if (isValid) {
+                if (this._day && this._dateCmp(date, this) === 0) {
+                    dayButton.className = 'active';
+                }
+
                 dayLink.setAttribute('data-cal-day', day);
+            } else {
+                dayButton.className = 'disabled';
             }
 
             return dayButton;
@@ -559,29 +556,6 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
             );
         },
 
-        /**
-         * Checks if a given date is an valid format.
-         *
-         * @method _isDate
-         * @param {String} format A date format.
-         * @param {String} dateStr A date on a string.
-         * @private
-         * @return {Boolean} True if the given date is valid according to the given format
-         */
-        _isDate: function(format, dateStr){
-            try {
-                if (typeof format === 'undefined'){
-                    return false;
-                }
-                var date = InkDate.set( format , dateStr );
-                if( date && this._isValidDate( dateishFromDate(date) )) {
-                    return true;
-                }
-            } catch (ex) {}
-
-            return false;
-        },
-
         _acceptableDay: function (date) {
             return this._acceptableDateComponent(date, 'validDayFn') && this._acceptableMonth(date);
         },
@@ -597,7 +571,7 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
         /** DRY base for the above 2 functions */
         _acceptableDateComponent: function (date, userCb) {
             if (this._options[userCb]) {
-                return this._callUserCallbackBool(this._options[userCb], date);
+                return !!this._callUserCallback(this._options[userCb], date);
             } else {
                 return this._dateWithinRange(date);
             }
@@ -733,16 +707,12 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
             return date;
         },
 
-        _callUserCallbackBase: function (cb, date) {
+        _callUserCallback: function (cb, date) {
             return cb.call(this, date._year, date._month + 1, date._day);
         },
 
-        _callUserCallbackBool: function (cb, date) {
-            return !!this._callUserCallbackBase(cb, date);
-        },
-
         _callUserCallbackDate: function (cb, date) {
-            var ret = this._callUserCallbackBase(cb, date);
+            var ret = this._callUserCallback(cb, date);
             return ret ? dateishFromDate(ret) : null;
         },
 
@@ -818,20 +788,10 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
          * @private
          */
         _dateWithinRange: function (date) {
-            if (!arguments.length) {
-                date = this;
-            }
+            date = date || this;
 
-            return  (!this._dateAboveMax(date) &&
-                    (!this._dateBelowMin(date)));
-        },
-
-        _dateAboveMax: function (date) {
-            return this._dateCmp(date, this._max) === 1;
-        },
-
-        _dateBelowMin: function (date) {
-            return this._dateCmp(date, this._min) === -1;
+            return (this._dateCmp(date, this._max) <= 0 &&
+                    this._dateCmp(date, this._min) >= 0);
         },
 
         _dateCmp: function (self, oth) {
