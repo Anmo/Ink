@@ -7,6 +7,16 @@
 Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'Ink.Dom.Element_1', 'Ink.Dom.Css_1', 'Ink.Util.Array_1'], function (Common, Event, InkElement, Css, InkArray) {
     'use strict';
 
+    function cmp(a, b) {
+        if (a < b) { return -1; }
+        if (a > b) { return 1; }
+        return 0;
+    }
+
+    function dateFromDateish(dateish) {
+        return new Date(dateish._year, dateish._month, dateish._day, 0, 0);
+    }
+
     function dateishFromDate(date) {
         return {_year: date.getFullYear(), _month: date.getMonth(), _day: date.getDate()};
     }
@@ -754,24 +764,32 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
          * // _dateCmpUntil to just check up to the years.
          *
          * _dateCmpUntil({_year: 2000, _month: 10}, {_year: 2000, _month: 11}, '_year') === 0
+         * _dateCmpUntil({_year: 2000, _month: 10}, {_year: 2000, _month: 11}, '_day') === -1  // doesn't break even though the second date doesn't have a _day.
          */
         _dateCmpUntil: function (self, oth, depth) {
-            var props = ['_decade', '_year', '_month', '_day'];
-            var i = -1;
+            if (depth === '_decade') {
+                return cmp(roundDecade(self._year), roundDecade(oth._year));
+            }
 
-            do {
-                i++;
-                if (props[i] !== '_decade') {
-                    if      (self[props[i]] > oth[props[i]]) { return 1; }
-                    else if (self[props[i]] < oth[props[i]]) { return -1; }
-                } else {
-                    if      (roundDecade(self) > roundDecade(oth)) { return 1; }
-                    else if (roundDecade(self) < roundDecade(oth)) { return -1; }
+            var props = ['_year', '_month', '_day'];
+            var endLoop = props.indexOf(depth) + 1;
+
+            var self_cpy = { _month: 0, _day: 1 };
+            var oth_cpy = { _month: 0, _day: 1 };
+
+            for (var i = 0; i < endLoop; i++) {
+                if (
+                    self[props[i]] === undefined ||
+                    oth[props[i]] === undefined
+                ) {
+                    break;
                 }
-            } while (props[i] !== depth &&
-                    self[props[i + 1]] !== undefined && oth[props[i + 1]] !== undefined);
 
-            return 0;
+                self_cpy[props[i]] = self[props[i]];
+                oth_cpy[props[i]] = oth[props[i]];
+            }
+
+            return cmp(dateFromDateish(self_cpy), dateFromDateish(oth_cpy));
         },
 
         /**
