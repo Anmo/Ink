@@ -363,7 +363,8 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
             for(var mon=0; mon<12; mon++){
                 var monthButton = this._getButton({ number: mon,
                     date: { _year: this._year, _month: mon },
-                    dayMonthOrYear: 'month', validator: this._acceptableMonth,
+                    dayMonthOrYear: 'month',
+                    validator: this._acceptableMonth,
                     linkText: this._options.month[mon + 1].substring(0, 3)
                 });
 
@@ -410,6 +411,11 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
             }
         },
 
+        /** 
+         * Generate a button (td > a) with a data-cal-year/month/day.
+         * 
+         * DRY base for {month,year,decade}View() functions.
+         **/
         _getButton: function (opt /* contains: number, date, dayMonthOrYear, validator, linkText */) {
             var button = InkElement.create('td');
             var link = button.appendChild(InkElement.create('a', {
@@ -440,7 +446,7 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
          * @public
          */
         getDate: function () {
-            return new Date(this._year, this._month, this._day);
+            return dateFromDateish(this);
         },
 
         /**
@@ -539,46 +545,18 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
          * Then checks if the all params are inside of the date range specified. If not, it will fallback to the nearest valid date (either Min or Max).
          *
          * @method _fitDateToRange
-         * @param  {Number} year  Year with 4 digits (yyyy)
-         * @param  {Number} month Month
-         * @param  {Number} day   Day
+         * @param  dateish
          * @return {Array}       Array with the final processed date.
          * @private
          */
         _fitDateToRange: function( date ) {
-            if ( !this._isValidDate( date ) ) {
-                date = dateishFromDate(new Date());
+            if (this._dateCmp(date, this._min) < 0) {
+                return dateishCopy(this._min);
+            } else if (this._dateCmp(date, this._max) > 0) {
+                return dateishCopy(this._max);
             }
 
-            if (this._dateCmp(date, this._min) === -1) {
-                return Ink.extendObj({}, this._min);
-            } else if (this._dateCmp(date, this._max) === 1) {
-                return Ink.extendObj({}, this._max);
-            }
-
-            return Ink.extendObj({}, date);  // date is okay already, just copy it.
-        },
-
-        /**
-         * Checks if a date is valid
-         *
-         * @method _isValidDate
-         * @param {Dateish} date
-         * @private
-         * @return {Boolean} True if the date is valid, false otherwise
-         */
-        _isValidDate: function(date){
-            var yearRegExp = /^\d{4}$/;
-            var validOneOrTwo = /^\d{1,2}$/;
-            return (
-                yearRegExp.test(date._year)     &&
-                validOneOrTwo.test(date._month) &&
-                validOneOrTwo.test(date._day)   &&
-                +date._month + 1 >= 1  &&
-                +date._month + 1 <= 12 &&
-                +date._day       >= 1  &&
-                +date._day       <= this._daysInMonth(date._year, date._month)
-            );
+            return dateishCopy(date);  // date is okay already, just copy it.
         },
 
         _acceptableDay: function (date) {
@@ -648,7 +626,7 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
                     date._year += increment;
                     date._year = roundDecade(date._year);
                 } else {
-                    date[atomName] += increment;
+                    date[atomName] += increment;  // Might overflow, but the date constructor takes care of it!
                     date = dateishFromDate(new Date(date._year, date._month, date._day ));
                 }
             }
@@ -744,8 +722,6 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
          * @private
          */
         _dateWithinRange: function (date) {
-            date = date || this;
-
             return (this._dateCmp(date, this._max) <= 0 &&
                     this._dateCmp(date, this._min) >= 0);
         },
