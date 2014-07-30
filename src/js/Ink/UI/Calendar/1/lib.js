@@ -661,53 +661,32 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
         _setMinMax: function( dateRange ) {
             var self = this;
 
-            var noMinLimit = {
-                _year: -Number.MAX_VALUE,
-                _month: 0,
-                _day: 1
-            };
-
-            var noMaxLimit = {
-                _year: Number.MAX_VALUE,
-                _month: 11,
-                _day: 31
-            };
+            var noMinLimit = { _year: -Number.MAX_VALUE, _month: 0, _day: 1 };
+            var noMaxLimit = { _year: Number.MAX_VALUE, _month: 11, _day: 31 };
 
             function noLimits() {
                 self._min = noMinLimit;
                 self._max = noMaxLimit;
             }
 
-            if (!dateRange) { return noLimits(); }
+            if (!dateRange) {
+                return noLimits();
+            }
 
-            var dates = dateRange.split( ':' );
+            var minMax = dateRange.toUpperCase().split( ':' );
 
-            InkArray.each([
-                        {name: '_min', date: dates[0], noLim: noMinLimit},
-                        {name: '_max', date: dates[1], noLim: noMaxLimit}
-                    ], Ink.bind(function (data) {
+            function readMinMax(str) {
+                return str === 'NOW'         ? dateishFromDate(new Date()) :
+                       str === 'EVER'        ? null :
+                       !isNaN(new Date(str)) ? dateishFromYMDString(str) :
+                                               null;
+            }
 
-                var lim = data.noLim;
-
-                if ( data.date.toUpperCase() === 'NOW' ) {
-                    var now = new Date();
-                    lim = dateishFromDate(now);
-                } else if (data.date.toUpperCase() === 'EVER') {
-                    lim = data.noLim;
-                } else if ( data.date.split('-').length === 3 ) {
-                    lim = dateishFromYMDString(data.date);
-
-                    lim._month = clamp(lim._month, 0, 11);
-                    lim._day = clamp(lim._day, 1, this._daysInMonth( lim._year, lim._month));
-                }
-
-                this[data.name] = lim;
-            }, this));
+            this._min = readMinMax(minMax[0]) || noMinLimit;
+            this._max = readMinMax(minMax[1]) || noMaxLimit;
 
             // _max should be greater than, or equal to, _min.
-            var valid = this._dateCmp(this._max, this._min) !== -1;
-
-            if (!valid) {
+            if (this._dateCmp(this._max, this._min) === -1) {
                 noLimits();
             }
         },
