@@ -472,8 +472,9 @@ Ink.createModule('Ink.UI.DatePicker', '1', ['Ink.UI.Common_1','Ink.Dom.Event_1',
          * @public
          **/
         destroy: function () {
-            InkElement.unwrap(this._element);
+            InkElement.remove(this._element);
             InkElement.remove(this._wrapper);
+            this._calendar.destroy();
             Common.unregisterInstance.call(this);
         }
     };

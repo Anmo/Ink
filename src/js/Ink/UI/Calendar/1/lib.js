@@ -769,13 +769,14 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
         },
 
         /**
-         * Remove the datepicker from the DOM and clean up the related events
+         * Remove the calendar from the DOM and clean up the related events
          *
          * @method destroy
          **/
         destroy: function () {
             Event.off(this._element);
             InkElement.remove(this._element);
+            Common.unregisterInstance.call(this);
         }
     };
 
