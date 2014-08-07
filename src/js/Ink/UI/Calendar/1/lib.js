@@ -473,8 +473,8 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
         _setDate: function (newDate) {
             newDate = this._fitDateToRange(newDate);
 
-            if (this._dateCmp(this, newDate) === 0 &&
-                    this._day !== undefined) {
+            if (this._day !== undefined &&
+                    this._dateCmp(this, newDate) === 0) {
                 return;
             }
 
@@ -670,7 +670,8 @@ Ink.createModule('Ink.UI.Calendar', 1, ['Ink.UI.Common_1', 'Ink.Dom.Event_1', 'I
             }
 
             if (!dateRange) {
-                return noLimits();
+                noLimits();
+                return;
             }
 
             var minMax = dateRange.toUpperCase().split( ':' );
