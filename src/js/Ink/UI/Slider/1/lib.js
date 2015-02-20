@@ -168,6 +168,8 @@ Ink.createModule( 'Ink.UI.Slider', '1',
         setValue : function( v , force ) {
             if ( this._isDown && !force ) { return; }
 
+            var _o = this._options;
+
             this._v = this._validateValue( v );
             var pct = this._toPercent( v , true );
 
