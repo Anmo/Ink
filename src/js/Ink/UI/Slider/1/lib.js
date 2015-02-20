@@ -48,9 +48,10 @@ Ink.createModule( 'Ink.UI.Slider', '1',
     Slider._name = 'Slider_1';
 
     Slider._optionDefinition = {
-        value            : [ 'Integer' , 0 ] ,
-        min              : [ 'Integer' , 0 ] ,
-        max              : [ 'Integer' , 1 ] ,
+        value            : [ 'Number' , 0 ] ,
+        min              : [ 'Number' , 0 ] ,
+        max              : [ 'Number' , 1 ] ,
+        step             : [ 'Number' , null ] ,
         offsetAttr       : [ 'String'  , 'left'  ] ,
         sizeAttr         : [ 'String'  , 'width' ] ,
         axis             : [ 'String'  , 'x' ] ,
@@ -71,7 +72,7 @@ Ink.createModule( 'Ink.UI.Slider', '1',
 
             var _o = s._options;
 
-            s._v = _o.value;
+            s._v = s._validateValue( _o.value );
             s._l = _o.max - _o.min;
 
             s._isDown = false;
@@ -95,7 +96,7 @@ Ink.createModule( 'Ink.UI.Slider', '1',
                     if ( _o.tickElement ) {
                         if( s._size  === 0 || s._size  === 1 ) { s._updateBounds( ); }
 
-                        var v = s._getValueFromPointer( p , true );
+                        var v = s._validateValue( s._getValueFromPointer( p , true ) , true );
 
                         if ( _o.onUpdateTick ) {
                             _o.onUpdateTick.call( s , p , v );
@@ -116,7 +117,7 @@ Ink.createModule( 'Ink.UI.Slider', '1',
                      ._isDown = true;
                 }
 
-                s.setValue( s._getValueFromPointer( p ) , true );
+                s.setValue( s._validateValue( s._getValueFromPointer( p ) ) , true );
 
                 if ( _o.onChanging ) {
                     _o.onChanging.call( s );
@@ -167,12 +168,7 @@ Ink.createModule( 'Ink.UI.Slider', '1',
         setValue : function( v , force ) {
             if ( this._isDown && !force ) { return; }
 
-            var _o = this._options;
-
-            if      ( v < _o.min ) { v = _o.min; }
-            else if ( v > _o.max ) { v = _o.max; }
-
-            this._v = v;
+            this._v = this._validateValue( v );
             var pct = this._toPercent( v , true );
 
             if ( _o.doneElement && !_o.skipDone ) {
@@ -211,7 +207,7 @@ Ink.createModule( 'Ink.UI.Slider', '1',
                 cueEl.id = id;
             }
 
-            cueEl.style[ this._options.offsetAttr ] = this._toPercent( o.value , true );
+            cueEl.style[ this._options.offsetAttr ] = this._toPercent( this._validateValue( o.value , true ) , true );
 
             if ( o.title ) { cueEl.title = o.title; }
 
@@ -284,6 +280,18 @@ Ink.createModule( 'Ink.UI.Slider', '1',
             return this;
         } ,
 
+        _validateValue : function( v , skipRound ) {
+            v = Math.max( Math.min( v , this._options.max ) , this._options.min );
+
+            if ( !isNaN( this._options.step ) && !skipRound ) {
+                var i = Math.round( ( v - this._options.min ) / this._options.step );
+
+                v = this._options.min + this._options.step * i;
+            }
+
+            return v;
+        } ,
+
         _toPercent : function( v , convertToRatioFirst ) {
             if ( convertToRatioFirst ) {
                 v = this._toRatio( v );
@@ -302,7 +310,7 @@ Ink.createModule( 'Ink.UI.Slider', '1',
         _getValueFromPointer : function( p , asRatio ) {
             var coord = p[ this._options.axis ] - this._offset;
 
-            if ( this._options.offsetAttr === 'bottom' ) {
+            if ( this._options.offsetAttr === 'bottom' || this._options.offsetAttr === 'right' ) {
                 coord *= -1;
             }
 
