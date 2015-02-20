@@ -117,7 +117,7 @@ Ink.createModule( 'Ink.UI.Slider', '1',
                      ._isDown = true;
                 }
 
-                s.setValue( s._validateValue( s._getValueFromPointer( p ) ) , true );
+                s.setValue( s._validateValue( s._getValueFromPointer( p ) ) );
 
                 if ( _o.onChanging ) {
                     _o.onChanging.call( s );
@@ -165,9 +165,7 @@ Ink.createModule( 'Ink.UI.Slider', '1',
 
         getValue : function( ) { return this._v; } ,
 
-        setValue : function( v , force ) {
-            if ( this._isDown && !force ) { return; }
-
+        setValue : function( v , madeByUser ) {
             var _o = this._options;
 
             this._v = this._validateValue( v );
@@ -179,8 +177,12 @@ Ink.createModule( 'Ink.UI.Slider', '1',
 
             _o.handleElement.style[ this._options.offsetAttr ] = pct;
 
+            if ( madeByUser && _o.onChange ) {
+                _o.onChange.call( this );
+            }
+
             return this;
-        },
+        } ,
 
         setScrubbing : function( v ) {
             Css.setClassName( this._element , 'disabled' , !v );
