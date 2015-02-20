@@ -175,7 +175,7 @@ Ink.createModule( 'Ink.UI.Slider', '1',
             this._v = v;
             var pct = this._toPercent( v , true );
 
-            if ( !_o.skipDone ) {
+            if ( _o.doneElement && !_o.skipDone ) {
                 _o.doneElement.style[ this._options.sizeAttr ] = pct;
             }
 
@@ -317,3 +317,4 @@ Ink.createModule( 'Ink.UI.Slider', '1',
     Common.createUIComponent( Slider );
 
     return Slider;
+});
