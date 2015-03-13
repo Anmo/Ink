@@ -6,6 +6,7 @@
 Ink.createModule( 'Ink.Util.Router' , '1' , [ 'Ink.Dom.Event_1' ] , function( InkEvent ) {
     'use strict';
 
+    var escapeRegExp = function( str ) { return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&"); };
     //var patternPath = /::([^:\/\[\]]+)|:([^:\*\{\+\/\[\]]+)((\+)|(\*)|(\{[^}]+}))?|(\[)|(\])|(\/)|([^:\/\[\]]+)/g;
     var patternPath = /::([^:\/\[\]]+)|:([^:\/\[\]]+)|(\[)|(\])|(\/)|([^:\/\[\]]+)/g;
     //var testInterval = /^\{0+(?:,|})/;
@@ -14,12 +15,12 @@ Ink.createModule( 'Ink.Util.Router' , '1' , [ 'Ink.Dom.Event_1' ] , function( In
         //c + ( x ? '(?:\/' + c + ')' + ( p || m ? '*' : i.replace( /(\d+)/g , function( m , $1 ) { $1 = parseInt( $1 ); return $1 ? $1 - 1 : $1; } ) ) : '' )
         // + ( m || i && testInterval.test( i ) ? '?' : '' )
 
-        return $  ? $ :
+        return $  ? escapeRegExp( $ ) :
                $1 ? '(' + ( this._options.params[ $1 ] || '[^\/]+' ) + ')' :
                $2 ? '(?:' :
                $3 ? ')?' :
                $4 ? '\\/' :
-                    '(' + $5 + ')';
+                    '(' + escapeRegExp( $5 ) + ')';
     };
 
     /*var splitter = function( arr ) {
